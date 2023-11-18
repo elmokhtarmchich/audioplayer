@@ -129,113 +129,92 @@
 <li ><a id=" 57 " href="https://streaming.radionomy.com/MarocMusic" ><img class="oui-image-cover" title= "Radio Maroc Music " src="./image/music.png" ><br> Maroc Music </a></li>
 <li ><a id=" 58 " href="http://51.15.191.112:8181/stream.aac" ><img class="oui-image-cover" title= "Izlan music " src="./image/izlan.png" ><br> Izlan music </a></li>
 <li ><a id=" 59 " href="http://stream.zenolive.com/bqdbb6hd0neuv" ><img class="oui-image-cover" title= "Radio Atbir " src="./image/atbir.png" ><br> Radio Atbir </a></li>
-	</ul>
+</ul>
 
 
-   <script src="https://code.jquery.com/jquery-2.2.0.js"></script>
-   <!-- <script src="C:\Users\acer\Desktop\BetterAudio\audioPlayer.js"></script>
-
-	<script src="https://cdn.jsdelivr.net/npm/@davland7/rplayer/dist/rplayer.min.js"></script>
 	
-	-->
-   <script src="./audioPlayer.js"></script>
-	
-
-
-	<script>
-function ResponsNav() {
-  var x = document.getElementById("myTopnav");
-  if (x.className === "topnav") {
-    x.className += " responsive";
-  } else {
-    x.className = "topnav";
-  }
-}
-</script>
-
-	<script>
-
-       var config = {
-autoplay: true, 
-loop: true,
-shuffle: true,
-	                           activeItem:0,
-                    volume:0.5,
-                    autoPlay:false,
-                    preload:"auto",
-                    randomPlay:false,
-                    loopingOn:true,
-                    mediaEndAction:"next",
-                    usePlaylistScroll:true,
-                    playlistScrollOrientation:"vertical",
-                    playlistScrollTheme:"light-thin",
-                    useKeyboardNavigationForPlayback:true,
-                    createDownloadIconsInPlaylist:true,
-                    createLinkIconsInPlaylist:true,
-                    facebookAppId:"",
-                    useNumbersInPlaylist: false,
-                    numberTitleSeparator: ".  ",
-                    artistTitleSeparator: " - ",
-                    sortableTracks: false,
-                    playlistItemContent:"title",
-                    useMediaSession:true,
-                    useStatistics:false,
-                    autoOpenPopup:false
-       };
-var playlist = new AudioPlaylist();
-	</script>
-
 <script>
-var toggle = false;
+
+var x = document.getElementsByClassName("oui-image-cover");
+var audio = document.getElementById('audioPlayer');
+
+if (audio) {
+  window.addEventListener('keydown', function (event) {
+    var key = event.which || event.keyCode;
+    var btn = $(".button");
+
+    if (key === 32) { // spacebar
+      // eat the spacebar, so it does not scroll the page
+      togglePlayPause();
+      event.preventDefault();
+      audio.paused ? audio.play() : audio.pause();
+    }
+  });
+}
+
 function togglePlayPause() {
-	   mediaPlayer = document.getElementById('audioPlayer');
-   if (! mediaPlayer.paused) {
-document.getElementById('play-pause-button').src = './image/play.png';
-   }
-   else {
-document.getElementById('play-pause-button').src = './image/pause.png';
-   }
+  mediaPlayer = document.getElementById('audioPlayer');
+  var btn = document.getElementById('play-pause-button');
+  if (!mediaPlayer.paused) {
+    btn.title = 'play';
+    btn.className = 'play';
+  } else {
+    btn.title = 'pause';
+    btn.className = 'pause';
+  }
+  updateNotification(); // Call the updateNotification function
 }
-</script>
-	
 
-<script>
-function myFunction() {
-mediaPlayer = document.getElementById('audioPlayer');
-  mediaPlayer.load();
-  mediaPlayer.play();
-}
-</script>
+/*------------------------------------------------------------*/
 
-<script>
-function notifyMe() {
-  // Let's check if the browser supports notifications
-  if (!("Notification" in window)) {
-    alert("This browser does not support desktop notification");
+class AudioPlaylist {
+  // ... (your existing code)
+
+  playpause() {
+    togglePlayPause();
+    event.preventDefault();
+    audio.paused ? audio.play() : audio.pause();
+    document.title = x[this.trackPos].title;
+    updateNotification(); // Call the updateNotification function
   }
 
-  // Let's check whether notification permissions have already been granted
-  else if (Notification.permission === "granted") {
-    // If it's okay let's create a notification
-    var notification = new Notification("Hi there!");
-  }
+  // ... (your existing code)
 
-  // Otherwise, we need to ask the user for permission
-  else if (Notification.permission !== "denied") {
-    Notification.requestPermission().then(function (permission) {
-      // If the user accepts, let's create a notification
-      if (permission === "granted") {
-        var notification = new Notification("Hi there!");
-      }
-    });
-  }
+  updateNotification() {
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: x[this.trackPos].title,
+        artist: 'Your Artist Name', // Replace with actual artist name
+        artwork: [
+          { src: x[this.trackPos].src, sizes: '96x96', type: 'image/png' },
+          // Add more artwork sizes as needed
+        ]
+      });
 
-  // At last, if the user has denied notifications, and you
-  // want to be respectful there is no need to bother them any more.
+      navigator.mediaSession.setActionHandler('play', function () {
+        audio.play();
+        updateNotification();
+      });
+
+      navigator.mediaSession.setActionHandler('pause', function () {
+        audio.pause();
+        updateNotification();
+      });
+
+      navigator.mediaSession.setActionHandler('previoustrack', function () {
+        this.prevTrack();
+        updateNotification();
+      });
+
+      navigator.mediaSession.setActionHandler('nexttrack', function () {
+        this.nextTrack();
+        updateNotification();
+      });
+    }
+  }
 }
+
 </script>
 
-	
-	
 </body>
 </html>
