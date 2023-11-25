@@ -54,13 +54,13 @@ class AudioPlaylist {
       btn.className = 'pause';
 	  	    //togglePlayPause();
 	document.title = x[this.trackPos].title;
-						   document.getElementById("demo").innerHTML = x[this.trackPos].title;
+document.getElementById("demo").innerHTML = x[this.trackPos].title;
 						   
 
     }
 	
     nextTrack(){
-				   var btn = document.getElementById('play-pause-button');
+var btn = document.getElementById('play-pause-button');
 		    var btn = $(".button");
         // if track isn't the last track in array of tracks, go to next track
         if(this.trackPos < this.length - 1)
@@ -73,8 +73,8 @@ class AudioPlaylist {
         this.player.play();			
 	      btn.className = 'pause';
 		 	  	    //togglePlayPause();
-		  		   document.title = x[this.trackPos].title;
-						   document.getElementById("demo").innerHTML = x[this.trackPos].title;
+document.title = x[this.trackPos].title;
+document.getElementById("demo").innerHTML = x[this.trackPos].title;
 
 
     }
