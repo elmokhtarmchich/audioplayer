@@ -118,7 +118,16 @@ ________________________
 document.title = x[this.trackPos].title;
 document.getElementById("demo").innerHTML = x[this.trackPos].title;
 
- 
+ // Prevent default behavior for anchor tags inside playlist items
+for (const track of tracks) {
+  const anchorTag = track.querySelector('a');
+  anchorTag.addEventListener('click', function (event) {
+    event.preventDefault();
+    const index = Array.from(tracks).indexOf(track);
+    playTrack(index);
+  });
+}
+
 
 
 		
@@ -155,4 +164,15 @@ function updateNotification() {
       });
     }
   }
+}
+
+
+					      // Prevent default behavior for anchor tags inside playlist items
+for (const track of tracks) {
+  const anchorTag = track.querySelector('a');
+  anchorTag.addEventListener('click', function (event) {
+    event.preventDefault();
+    const index = Array.from(tracks).indexOf(track);
+    playTrack(index);
+  });
 }
