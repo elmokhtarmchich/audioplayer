@@ -107,10 +107,13 @@ ________________________
             // set track based on index of 
             classObj.setTrack(classObj.trackOrder.indexOf($(this).parent().index()));
             classObj.player.play();
-		  		   document.title = x[this.trackPos].title;
-				   						   document.getElementById("demo").innerHTML = x[this.trackPos].title;
+document.title = x[this.trackPos].title;
+document.getElementById("demo").innerHTML = x[this.trackPos].title;
 
-  updateNotification() {
+ 
+		
+		
+function updateNotification() {
     if ('mediaSession' in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: x[this.trackPos].title,
