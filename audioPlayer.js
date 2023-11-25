@@ -28,6 +28,14 @@ function togglePlayPause() {
   updateNotification(); // Call the updateNotification function
 }
 
+	       togglePlayPause();
+	   event.preventDefault();
+      audio.paused ? audio.play() : audio.pause();
+	   togglePlayPause();
+	   event.preventDefault();
+      audio.paused ? audio.play() : audio.pause();
+            e.preventDefault();
+
 /*------------------------------------------------------------*/
 
 class AudioPlaylist {
@@ -111,6 +119,8 @@ document.title = x[this.trackPos].title;
 document.getElementById("demo").innerHTML = x[this.trackPos].title;
 
  
+
+
 		
 		
 function updateNotification() {
