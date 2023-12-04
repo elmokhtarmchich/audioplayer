@@ -16,9 +16,9 @@ if (audio) {
 }
 
 function togglePlayPause() {
-  mediaPlayer = document.getElementById('audioPlayer');
+  audioPlayer = document.getElementById('audioPlayer');
   var btn = document.getElementById('play-pause-button');
-  if (!mediaPlayer.paused) {
+  if (!audioPlayer.paused) {
     btn.title = 'play';
     btn.className = 'play';
   } else {
