@@ -60,7 +60,17 @@
 <li data-src="http://stream.zenolive.com/bqdbb6hd0neuv"><a id=" 59 "  ><img class="oui-image-cover" title= "Radio Atbir " src="./image/atbir.png" ><br> Radio Atbir </a></li>
 </ul>
 
+	<script>
+navigator.mediaSession.setActionHandler('previoustrack', () => {
+    // Whatever you need to do to play the previous track.
+	  playPrevious();
 
+});
+navigator.mediaSession.setActionHandler('nexttrack', () => {
+    // Whatever you need to do to play the next track.
+	playNext();
+});
+	</script>
 
 <script>
   const audioPlayer = document.getElementById('audioPlayer');
