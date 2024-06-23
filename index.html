@@ -3,91 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Song Recognition Feature</title>
-    <!-- Load CryptoJS from CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <title>Audio Recognition Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
 </head>
 <body>
-    <video id="videoPlayer" controls>
-        <source src="https://gold.ice.infomaniak.ch/gold-128.mp3" type="audio/mpeg" />     
-
-    </video>
+    <audio id="audioPlayer" controls>
+        <source src="houdini.mp3" type="audio/mp3">
+    </audio>
     <button id="recognizeButton">Recognize Song</button>
-    <div id="songInfo"></div>
+
     <script>
-        // script.js
-document.addEventListener('DOMContentLoaded', function () {
-    const videoPlayer = document.getElementById('videoPlayer');
-    const recognizeButton = document.getElementById('recognizeButton');
-    const songInfo = document.getElementById('songInfo');
+        document.getElementById('recognizeButton').addEventListener('click', function () {
+            // Your recognition code here
+        });
 
-    // ACRCloud credentials
-    const ACRCloudConfig = {
-        host: 'identify-us-west-2.acrcloud.com',
-        accessKey: 'a0ba2810bef423ff17775b1c2a8be223',
-        accessSecret: 'ywdtRQgFYQhLxHXKcUSvEsCBcQyMPdybp8lVFh6V',
-    };
-
-    // Function to recognize the song
-    async function recognizeSong() {
-        try {
-            // Capture audio from video player
+        // Example recognition function
+        function recognizeAudio() {
+            const audioElement = document.getElementById('audioPlayer');
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const mediaElement = audioContext.createMediaElementSource(videoPlayer);
+            const source = audioContext.createMediaElementSource(audioElement);
             const analyser = audioContext.createAnalyser();
-            mediaElement.connect(analyser);
+
+            source.connect(analyser);
             analyser.connect(audioContext.destination);
 
-            // Create an audio buffer to capture audio data
-            const bufferLength = analyser.fftSize;
-            const buffer = new Uint8Array(bufferLength);
-
-            // Capture audio data
-            analyser.getByteTimeDomainData(buffer);
-
-            // Convert audio buffer to base64
-            const audioData = buffer.toString('base64');
-
-            // Prepare ACRCloud API request
-            const timestamp = Math.floor(Date.now() / 1000);
-            const stringToSign = `POST\n/v1/identify\n${ACRCloudConfig.accessKey}\n${timestamp}`;
-            const signature = CryptoJS.HmacSHA1(stringToSign, ACRCloudConfig.accessSecret).toString(CryptoJS.enc.Base64);
-
-            const formData = new FormData();
-            formData.append('access_key', ACRCloudConfig.accessKey);
-            formData.append('data_type', 'audio');
-            formData.append('signature', signature);
-            formData.append('sample_bytes', bufferLength);
-            formData.append('sample', audioData);
-            formData.append('timestamp', timestamp);
-
-            // Send audio data to ACRCloud for recognition
-            const response = await fetch(`https://${ACRCloudConfig.host}/v1/identify`, {
-                method: 'POST',
-                body: formData,
-            });
-
-            const result = await response.json();
-            if (result.status.code === 0) {
-                // Display recognized song information
-                const metadata = result.metadata.music[0];
-                songInfo.innerHTML = `
-                    <p>Title: ${metadata.title}</p>
-                    <p>Artist: ${metadata.artists.map(artist => artist.name).join(', ')}</p>
-                    <p>Album: ${metadata.album.name}</p>
-                `;
-            } else {
-                songInfo.innerHTML = '<p>Song not recognized. Please try again.</p>';
-            }
-        } catch (error) {
-            console.error('Error recognizing song:', error);
-            songInfo.innerHTML = '<p>Error recognizing song. Please try again later.</p>';
+            // Further processing for ACRCloud...
         }
+    </script>
+        <script>
+      document.getElementById('recognizeButton').addEventListener('click', recognizeAudio);
+
+function recognizeAudio() {
+    const audioElement = document.getElementById('audioPlayer');
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioContext.createMediaElementSource(audioElement);
+    const analyser = audioContext.createAnalyser();
+
+    source.connect(analyser);
+    analyser.connect(audioContext.destination);
+
+    analyser.fftSize = 2048;
+    const bufferLength = analyser.fftSize;
+    const dataArray = new Uint8Array(bufferLength);
+
+    function captureAudio() {
+        analyser.getByteTimeDomainData(dataArray);
+        const base64String = btoa(String.fromCharCode.apply(null, dataArray));
+
+        // Send base64String to ACRCloud for recognition
+        const acrCloudRequest = {
+            host: 'identify-us-west-2.acrcloud.com',
+            accessKey: 'a0ba2810bef423ff17775b1c2a8be223',
+            accessSecret: 'ywdtRQgFYQhLxHXKcUSvEsCBcQyMPdybp8lVFh6V',
+            // Additional necessary headers and data
+        };
+
+        fetch(`https://${acrCloudRequest.host}/v1/identify`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-acrcloud-access-key': acrCloudRequest.accessKey,
+                'x-acrcloud-signature': generateSignature(acrCloudRequest.accessSecret),
+                'x-acrcloud-signature-version': '2',
+                'x-acrcloud-timestamp': Math.floor(Date.now() / 1000).toString()
+            },
+            body: JSON.stringify({
+                sample: base64String,
+                sample_bytes: dataArray.byteLength
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Recognition result:', data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
     }
 
-    recognizeButton.addEventListener('click', recognizeSong);
-});
+    captureAudio();
+}
 
-    </script>
+function generateSignature(secret) {
+    const date = new Date();
+    const stringToSign = `POST\n/v1/identify\n\n${Math.floor(date.getTime() / 1000)}`;
+    return CryptoJS.HmacSHA1(stringToSign, secret).toString(CryptoJS.enc.Base64);
+}
+
+        </script>
 </body>
 </html>
