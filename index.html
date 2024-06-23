@@ -1,190 +1,93 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Radio Maroc FM/AM. Écouter la WebRadio sur iRadio.ma</title>
-<link rel="manifest" href="./manifest.webmanifest">
-<meta charset = "utf-8" />
-<link rel="stylesheet" href="./style.css">
-<script src="./audioPer.js"></script>
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Song Recognition Feature</title>
+    <!-- Load CryptoJS from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
 <body>
+    <video id="videoPlayer" controls>
+        <source src="https://gold.ice.infomaniak.ch/gold-128.mp3" type="audio/mpeg" />     
 
+    </video>
+    <button id="recognizeButton">Recognize Song</button>
+    <div id="songInfo"></div>
+    <script>
+        // script.js
+document.addEventListener('DOMContentLoaded', function () {
+    const videoPlayer = document.getElementById('videoPlayer');
+    const recognizeButton = document.getElementById('recognizeButton');
+    const songInfo = document.getElementById('songInfo');
 
-	
-<div class="topnav" id="myTopnav">
-<a class="active" ><img href="https://www.iradio.ma" class="logo" src="./image/logo.png" ></a>
-<a href="#home" onclick="window.location.reload(true);">Home</a>
-<a href="#contact">Contact</a>
-<a onclick="notifyMe()">Notify me!</a>
-<input class="add-button" type="button" value="Add Web App">
-  <button onclick="playPrevious()">Previous</button>
-  <button onclick="togglePlayPause()">Play/Pause</button>
-  <button onclick="playNext()">Next</button>
-	
-<a href="javascript:void(0);" class="icon" onclick="ResponsNav()">
-    <i class="fa fa-bars"></i>
-  </a>
-</div>
+    // ACRCloud credentials
+    const ACRCloudConfig = {
+        host: 'identify-us-west-2.acrcloud.com',
+        accessKey: 'a0ba2810bef423ff17775b1c2a8be223',
+        accessSecret: 'ywdtRQgFYQhLxHXKcUSvEsCBcQyMPdybp8lVFh6V',
+    };
 
-	
-<audio id="audioPlayer" controls>
-	<source src="https://medinafm.ice.infomaniak.ch/medinafm-128.mp3">
-	</audio>
+    // Function to recognize the song
+    async function recognizeSong() {
+        try {
+            // Capture audio from video player
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const mediaElement = audioContext.createMediaElementSource(videoPlayer);
+            const analyser = audioContext.createAnalyser();
+            mediaElement.connect(analyser);
+            analyser.connect(audioContext.destination);
 
-<div class="row">
-  <div class="column">
-<p id="demo" style="">Playing..</p>
-  </div>
-  <div class="column">
-<img href="#" onclick="playPrevious();" src="./image/next.png" style=" height: 45px; width: auto; filter: invert(1); display: table-cell;  margin: auto; transform: scaleX(-1);"> 
-  </div> 
-  <div class="column">
-<img id="play-pause-button" onclick='togglePlayPause();' src="./image/play.png" style="height: 45px; width: auto; filter: invert(1);  display: table-cell;  margin: auto; ">
-  </div>  
-  <div class="column">
-<img href="#" onclick="playNext();" src="./image/next.png"  style="height: 45px; width: auto; filter: invert(1); display: table-cell; margin: auto;">
-  </div>
+            // Create an audio buffer to capture audio data
+            const bufferLength = analyser.fftSize;
+            const buffer = new Uint8Array(bufferLength);
 
-</div>
+            // Capture audio data
+            analyser.getByteTimeDomainData(buffer);
 
-<ul id="playlist">
-<li data-src="https://streamer.eagrpservices.com/audio/medradio.mp3"><a id=" 01 "  ><img class="oui-image-cover" title= "Med Radio " src="./image/med.png" ><br> Med Radio </a></li>
-<li data-src="https://admdn7ta.cdn.mangomolo.com/quranrdo/quranrdo.stream_aac/chunklist.m3u8" ><a id=" 02 " ><img class="oui-image-cover" title= "Radio Coran " src="./image/coran.png" ><br> Coran </a></li>
-<li data-src="https://medinafm.ice.infomaniak.ch/medinafm-128.mp3"  ><a id=" 03 " href="https://medinafm.ice.infomaniak.ch/medinafm-128.mp3" ><img class="oui-image-cover" title= "Medina FM " src="./image/medina.png" ><br> Medina FM </a></li>
-<li data-src="https://streamer.eagrpservices.com/audio/chadafm.mp3" ><a id=" 04 " ><img class="oui-image-cover" title= "Chada FM " src="./image/chada.png" ><br> Chada FM </a></li>
-<li data-src="https://streaming2.medi1tv.com/webradio/radio_mag.stream_aac/chunklist_w1607380952.m3u8"><a id=" 05 "  ><img class="oui-image-cover" title= "Medi 1 " src="./image/medi.png" ><br> Medi 1 Radio </a></li>
-<li data-src="http://radiomars.ice.infomaniak.ch/radiomars-128.mp3" ><a id=" 06 " ><img class="oui-image-cover" title= "Radio Mars " src="./image/mars.png" ><br> Radio Mars </a></li>
-<li data-src="http://stream.zenolive.com/bqdbb6hd0neuv"><a id=" 59 "  ><img class="oui-image-cover" title= "Radio Atbir " src="./image/atbir.png" ><br> Radio Atbir </a></li>
-</ul>
+            // Convert audio buffer to base64
+            const audioData = buffer.toString('base64');
 
-	<script>
-navigator.mediaSession.setActionHandler('previoustrack', () => {
-    // Whatever you need to do to play the previous track.
-	  playPrevious();
+            // Prepare ACRCloud API request
+            const timestamp = Math.floor(Date.now() / 1000);
+            const stringToSign = `POST\n/v1/identify\n${ACRCloudConfig.accessKey}\n${timestamp}`;
+            const signature = CryptoJS.HmacSHA1(stringToSign, ACRCloudConfig.accessSecret).toString(CryptoJS.enc.Base64);
 
-});
-navigator.mediaSession.setActionHandler('nexttrack', () => {
-    // Whatever you need to do to play the next track.
-	playNext();
-});
-	</script>
+            const formData = new FormData();
+            formData.append('access_key', ACRCloudConfig.accessKey);
+            formData.append('data_type', 'audio');
+            formData.append('signature', signature);
+            formData.append('sample_bytes', bufferLength);
+            formData.append('sample', audioData);
+            formData.append('timestamp', timestamp);
 
-<script>
-  const audioPlayer = document.getElementById('audioPlayer');
-  const playlist = document.getElementById('playlist');
-  const tracks = playlist.getElementsByTagName('li');
-  let currentTrack = 0;
+            // Send audio data to ACRCloud for recognition
+            const response = await fetch(`https://${ACRCloudConfig.host}/v1/identify`, {
+                method: 'POST',
+                body: formData,
+            });
 
-  function playTrack(index) {
-    if (index >= 0 && index < tracks.length) {
-      audioPlayer.src = tracks[index].getAttribute('data-src');
-      audioPlayer.play();
-      currentTrack = index;
-    }
-  }
-
-  function playNext() {
-    currentTrack = (currentTrack + 1) % tracks.length;
-    playTrack(currentTrack);
-  }
-
-  function playPrevious() {
-    currentTrack = (currentTrack - 1 + tracks.length) % tracks.length;
-    playTrack(currentTrack);
-  }
-
-  audioPlayer.addEventListener('ended', playNext);
-
-
-  // Prevent default behavior for anchor tags inside playlist items
-for (const track of tracks) {
-  const anchorTag = track.querySelector('a');
-  anchorTag.addEventListener('click', function (event) {
-    event.preventDefault();
-    const index = Array.from(tracks).indexOf(track);
-    playTrack(index);
-  });
-}
-</script>
-
-<script>
-  const audioPlayer = document.getElementById('audioPlayer');
-  const playlist = document.getElementById('playlist');
-  const tracks = playlist.getElementsByTagName('li');
-
-  function playTrack(index) {
-    const track = tracks[index];
-    const audioSource = track.getAttribute('data-src');
-    audioPlayer.src = audioSource;
-    audioPlayer.play();
-    updateNotification(index);
-  }
-
-  function updateNotification(index) {
-    if ('Notification' in window) {
-      Notification.requestPermission().then(function (permission) {
-        if (permission === 'granted') {
-          const track = tracks[index];
-          const notification = new Notification('Now Playing', {
-            body: track.innerText,
-            icon: track.querySelector('img').src,
-            actions: [
-              { action: 'prev', title: 'Previous' },
-              { action: 'next', title: 'Next' }
-            ]
-          });
-
-          notification.addEventListener('click', function () {
-            // Handle notification click
-            // You can add custom behavior here if needed
-            notification.close();
-          });
-
-          notification.addEventListener('action', function (event) {
-            // Handle notification button click
-            if (event.action === 'prev') {
-              playPrevious();
-            } else if (event.action === 'next') {
-              playNext();
+            const result = await response.json();
+            if (result.status.code === 0) {
+                // Display recognized song information
+                const metadata = result.metadata.music[0];
+                songInfo.innerHTML = `
+                    <p>Title: ${metadata.title}</p>
+                    <p>Artist: ${metadata.artists.map(artist => artist.name).join(', ')}</p>
+                    <p>Album: ${metadata.album.name}</p>
+                `;
+            } else {
+                songInfo.innerHTML = '<p>Song not recognized. Please try again.</p>';
             }
-          });
+        } catch (error) {
+            console.error('Error recognizing song:', error);
+            songInfo.innerHTML = '<p>Error recognizing song. Please try again later.</p>';
         }
-      });
     }
-  }
 
-  // Add click event listeners to all items in the playlist
-  for (let i = 0; i < tracks.length; i++) {
-    tracks[i].addEventListener('click', function (event) {
-      event.preventDefault();
-      playTrack(i);
-    });
-  }
+    recognizeButton.addEventListener('click', recognizeSong);
+});
 
-  function playNext() {
-    // Implement playNext logic
-    // For simplicity, assuming a sequential playlist here
-    const nextIndex = (currentIndex + 1) % tracks.length;
-    playTrack(nextIndex);
-  }
-
-  function playPrevious() {
-    // Implement playPrevious logic
-    // For simplicity, assuming a sequential playlist here
-    const previousIndex = (currentIndex - 1 + tracks.length) % tracks.length;
-    playTrack(previousIndex);
-  }
-
-  let currentIndex = 0; // Keep track of the current playing track
-
-  audioPlayer.addEventListener('ended', function () {
-    // Automatically play the next track when the current track ends
-    playNext();
-  });
-</script>
-
+    </script>
 </body>
 </html>
